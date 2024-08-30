@@ -69,3 +69,18 @@ The gainTurn function currently allows players who have already joined the game 
 
 5. verifyAttack
 The verifyAttack function is central to the gameplay, allowing players to attempt an attack on the castle. The function first checks that the player has at least one turn available and that the daimyo has set up a defense. The attack is then verified using an off-chain process, where a verifier checks the validity of the attack based on provided parameters (x and seal). If the attack is successful and x equals 1, the attacking player becomes the new daimyo. Regardless of the outcome, one turn is deducted from the player who called the function. This function enforces strategic gameplay, where players must manage their turns and carefully plan their attacks.
+
+## ZKVM 
+
+Now. lets talk about offchain computation: 
+
+This proof-of-concept (POC) implements the first phase of what will eventually be a multi-phase battle simulation. In this initial phase, the attacking catapults target the wall while the defending catapults fire back, aiming to destroy the attacking catapults. This phase sets the foundation for future phases that will add more complexity to the battle dynamics.
+
+A Zero-Knowledge Virtual Machine (ZKVM) enables off-chain computations with verifiable results, crucial for scaling blockchain applications. In this POC, the guest code, which simulates the battle's first phase, runs within the ZKVM. It takes the number of attacking catapults as input and calculates whether the attackers damage the wall, the defenders repel the attack, or if it's a draw. The ZKVM then produces a cryptographic proof, which is verified by the host code to ensure the off-chain computation is accurately reflected on-chain. This proof, stored as a journal, contains the computation's output, while the associated seal ensures its integrity. The guest code can be executed in a service like Bonsai or another hosted environment, making it easier to manage complex computations while keeping the blockchain light and scalable.
+
+While privacy is a potential benefit of using ZKVM, it was not the focus of this POC. The primary objective was to demonstrate the capability to offload and verify computations off-chain to improve scalability. However, ZKVM also supports privacy-preserving computations, where sensitive data can remain confidential while still generating verifiable proofs.
+
+This is the order of data flow in this POC 
+
+![alt text](images/zkVM.png)
+

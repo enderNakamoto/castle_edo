@@ -16,7 +16,7 @@ Both attacking and defending armies must adhere to specific rules and limitation
 
 ## Technical Details 
 
-![alt text](images/architecture.png.png)
+![alt text](images/architecture.png)
 
 There are various parts to the game: 
 * The Smart Contract 

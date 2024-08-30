@@ -1,5 +1,7 @@
 ![alt text](images/castle.png)
 
+
+
 ## Overview
 
 Castle Tokyo (also known as Castle Edo) is a proof-of-concept game designed to integrate Risc0's zkVM for offchain computation with Acurast Oracles to retrieve real-time weather data for Tokyo, which influences the outcome of battles.
@@ -80,7 +82,21 @@ A Zero-Knowledge Virtual Machine (ZKVM) enables off-chain computations with veri
 
 While privacy is a potential benefit of using ZKVM, it was not the focus of this POC. The primary objective was to demonstrate the capability to offload and verify computations off-chain to improve scalability. However, ZKVM also supports privacy-preserving computations, where sensitive data can remain confidential while still generating verifiable proofs.
 
-This is the order of data flow in this POC 
+This is the order of data flow in this POC:
 
 ![alt text](images/zkVM.png)
+
+## Simulation 
+
+Instead of consolidating everything into a single Rust guest code program, we chose to implement the battle simulation logic in TypeScript while reserving the Rust guest code for verifying the outcomes. While this approach may result in a more extensive codebase, it allows us to build a richer, more dynamic experience for our end users. In the TypeScript simulation, we can introduce complex strategy game elements like tracking the strength of the castle walls, monitoring when troops fall in battle, and detailing which units are attacking which targets. This adds depth to the simulation by providing a more granular view of the battlefield, where every move, from a catapult's assault on the wall to a defender's counterattack, can be meticulously logged and animated. This type of detailed logic isn't necessary in the prover part of the system. By separating the simulation logic from the verification process, we create two distinct roles: the TypeScript program manages the intricate battle scenarios, while the Rust guest code focuses purely on verifying that the results of these engagements are accurate and trustworthy. This separation allows us to enhance the user experience without overcomplicating the proof-generation process.
+
+The code is in - https://github.com/enderNakamoto/castle_edo_sim_js
+And the simulator output looks like : 
+
+![alt text](images/simulation.png)
+
+This also shows how complex the battle can be, and would need enormous amount of gas, if it was computed on-chain in a while loop: 
+
+## Weather Oracle 
+
 

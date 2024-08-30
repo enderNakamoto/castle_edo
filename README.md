@@ -1,5 +1,7 @@
 ![alt text](images/castle.png)
 
+# Castle Tokyo(Edo)
+
 ## Github Links for the Project
 *  Battle Simulator in JS - https://github.com/enderNakamoto/castle_edo_sim_js
 *  Acurast Weather - https://github.com/enderNakamoto/acurast_tokyo_weather

@@ -9,7 +9,7 @@
 
 ## Overview
 
-Castle Tokyo (also known as Castle Edo) is a proof-of-concept game designed to integrate Risc0's zkVM for offchain computation with Acurast Oracles to retrieve real-time weather data for Tokyo, which influences the outcome of battles.
+Castle Tokyo (also known as Castle Edo) is a proof-of-concept game designed to integrate Risc0's zkVM for offchain computation with Acurast Oracles to retrieve real-time weather data for Tokyo, which influences the outcome of battles. The Smart contracts are deployed on BOB. 
 
 This project was developed during a hackathon with the primary focus on laying the groundwork for future fully on-chain games rather than creating a UX-friendly experience. While some objectives have been achieved, significant work and integration are still required to reach the full potential of this concept. The ultimate goal is to establish a game framework that leverages zk technology for privacy and scalability, while using oracles to obtain random numbers (VRF) or other intriguing data—such as weather in our case—to enhance the game's dynamics.
 

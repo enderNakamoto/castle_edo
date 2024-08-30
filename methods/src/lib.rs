@@ -7,32 +7,34 @@ mod tests {
     use risc0_zkvm::{default_executor, ExecutorEnv};
 
     #[test]
-    fn proves_even_number() {
-        let even_number = U256::from(1304);
+    fn attackers_win() {
+        let attacking_catapults = U256::from(500); // Attackers should win with a strong force
 
         let env = ExecutorEnv::builder()
-            .write_slice(&even_number.abi_encode())
+            .write_slice(&attacking_catapults.abi_encode())
             .build()
             .unwrap();
 
-        // NOTE: Use the executor to run tests without proving.
-        let session_info = default_executor().execute(env, super::IS_EVEN_ELF).unwrap();
+        // Execute the simulation
+        let session_info = default_executor().execute(env, super::BATTLE_SIM_ELF).unwrap();
 
-        let x = U256::abi_decode(&session_info.journal.bytes, true).unwrap();
-        assert_eq!(x, even_number);
+        let result = U256::abi_decode(&session_info.journal.bytes, true).unwrap();
+        assert_eq!(result, U256::from(1)); // Expecting attackers to win, result should be 1
     }
 
     #[test]
-    #[should_panic(expected = "number is not even")]
-    fn rejects_odd_number() {
-        let odd_number = U256::from(75);
+    fn defenders_win() {
+        let attacking_catapults = U256::from(100); // Defenders should win with a weaker attacking force
 
         let env = ExecutorEnv::builder()
-            .write_slice(&odd_number.abi_encode())
+            .write_slice(&attacking_catapults.abi_encode())
             .build()
             .unwrap();
 
-        // NOTE: Use the executor to run tests without proving.
-        default_executor().execute(env, super::IS_EVEN_ELF).unwrap();
+        // Execute the simulation
+        let session_info = default_executor().execute(env, super::BATTLE_SIM_ELF).unwrap();
+
+        let result = U256::abi_decode(&session_info.journal.bytes, true).unwrap();
+        assert_eq!(result, U256::from(2)); // Expecting defenders to win, result should be 2
     }
 }

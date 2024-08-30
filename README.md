@@ -126,3 +126,92 @@ A lot needs to be done:
 
 * Payable incentives for King of the castle needs to be implemented. Perhaps Ordinals will come in Handy here...
 
+## Deployed Contracts 
+
+The contracts were Deployed on Bob Sepolia Testnet here: 
+
+```
+ You are deploying on ChainID 808813
+  Deployed RiscZeroGroth16Verifier to 0x7FD57003A2179af41ce6F742060E403F759d0434
+  Deployed Battle Sim to 0xA46aB2d37b35D47EdAEc405E5e322c03ae5F8B1d
+```
+
+I had difficulty in Verifying the contracts 
+
+## Building and Running the Tests locally
+
+The best way to demo it is to build the project and run the tests locally, This can be achieved in three steps - 
+
+### Step 1 - Get Dependencies
+
+First, [install Rust] and [Foundry], and then restart your terminal.
+
+```sh
+# Install Rust
+curl https://sh.rustup.rs -sSf | sh
+# Install Foundry
+curl -L https://foundry.paradigm.xyz | bash
+```
+
+Next, you will use `rzup` to install `cargo-risczero`.
+
+To install `rzup`, run the following command and follow the instructions:
+
+```sh
+curl -L https://risczero.com/install | bash
+```
+
+Next we can install the RISC Zero toolchain by running `rzup`:
+
+```sh
+rzup
+```
+
+You can verify the installation was successful by running:
+
+```sh
+cargo risczero --version
+```
+
+Now you have all the tools you need to develop and deploy an application with [RISC Zero].
+
+### Step 2 - Build the Code
+
+- Builds for zkVM program, the publisher app, and any other Rust code.
+
+  ```sh
+  cargo build
+  ```
+
+- Build your Solidity smart contracts
+
+  > NOTE: `cargo build` needs to run first to generate the `ImageID.sol` contract.
+
+  ```sh
+  forge build
+  ```
+
+ ### Step 3 - Run the Tests
+
+- Tests your zkVM program.
+
+  ```sh
+  cargo test
+  ```
+
+- Test your Solidity contracts, integrated with your zkVM program.
+
+  ```sh
+  RISC0_DEV_MODE=true forge test -vvv 
+  ```
+
+- Run the same tests, with the full zkVM prover rather than dev-mode, by setting `RISC0_DEV_MODE=false`.
+
+  ```sh
+  RISC0_DEV_MODE=false forge test -vvv
+  ```
+
+  Producing the [Groth16 SNARK proofs][Groth16] for this test requires running on an x86 machine with [Docker] installed, or using [Bonsai](#configuring-bonsai). Apple silicon is currently unsupported for local proving, you can find out more info in the relevant issues [here](https://github.com/risc0/risc0/issues/1520) and [here](https://github.com/risc0/risc0/issues/1749).  
+
+
+

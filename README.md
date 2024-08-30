@@ -1,6 +1,9 @@
 ![alt text](images/castle.png)
 
-
+## Github Links for the Project
+*  Battle Simulator in JS - https://github.com/enderNakamoto/castle_edo_sim_js
+*  Acurast Weather - https://github.com/enderNakamoto/acurast_tokyo_weather
+*  (The Most Important) Risc0 ZKVM Guest/Host Code and the Smart Contract - https://github.com/enderNakamoto/castle_edo
 
 ## Overview
 
@@ -99,4 +102,27 @@ This also shows how complex the battle can be, and would need enormous amount of
 
 ## Weather Oracle 
 
+We also get Weather from Acurast. The data comes from OpenWeather's API. It simply tells us if it raining, drizzling in Tokyo. A sample response from Acurast looks like: 
+
+![alt text](images/sample.png)
+
+The Data flow for weather is: 
+
+![alt text](images/weather.png)
+
+Right now we got the weather updates, but ran out of time before implementing how it will affect the fight. 
+
+## Todo: 
+
+A lot needs to be done: 
+
+* Tighter Integration of zkVM with Smart Contract, Earlier Risc0's Relay Architecture meant that that on-chain data can be directly fed into Bonsai and get the result. Now, A publisher App or a Client needs to be written to securely bridge zkVM and the smart Contract on BOB 
+
+* Using The Weather data, although we get the weather data from Acurast, we have not used it yet in the game 
+
+* Only the first phase of the game has been implemented as a POC. More Phases of the Battle needs to be implented. e.g. Archer Shootout, Cavalry Charge, Mounting the Castkle walls, Attacks with Battering Ram etc. 
+
+* Front end - We need to make the game playable ,and not just be a simulation. 
+
+* Payable incentives for King of the castle needs to be implemented. Perhaps Ordinals will come in Handy here...
 

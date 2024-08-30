@@ -181,6 +181,8 @@ Below are the primary files in the project directory
     └── Elf.sol                     // Generated contract with paths the guest program ELF files.
 ```
 
+![alt text](images/deploy.png)
+
 [Bonsai]: https://dev.bonsai.xyz/
 [Foundry]: https://getfoundry.sh/
 [Docker]: https://docs.docker.com/get-docker/

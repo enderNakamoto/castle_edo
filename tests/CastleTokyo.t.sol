@@ -23,7 +23,7 @@ import {IRiscZeroVerifier} from "risc0/IRiscZeroVerifier.sol";
 import {CastleTokyo} from "../contracts/CastleTokyo.sol";
 import {Elf} from "./Elf.sol"; // auto-generated contract after running `cargo build`.
 
-contract EvenNumberTest is RiscZeroCheats, Test {
+contract CastleTokyoTest is RiscZeroCheats, Test {
 
     CastleTokyo public castleTokyo;
     address daimyo = address(1);

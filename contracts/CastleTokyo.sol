@@ -30,6 +30,7 @@ contract CastleTokyo {
     address public weatherSetter;
     uint256 public lastWeatherSetTime;
     uint256 public attackCount;
+    uint256 public weatherUpdateCount;
     mapping(address => uint256) public playerTurns;
     mapping(address => bool) public joinedPlayers;
     Defense public currentDefense;
@@ -85,9 +86,12 @@ contract CastleTokyo {
     }
 
     // Function to set the weather condition
+    // Assuming price can be set without restriction for simplicity
+    // In a real-world scenario, there should be access control mechanisms
     function setWeather(Weather _weather) external onlyWeatherSetter {
         currentWeather = _weather;
         lastWeatherSetTime = block.timestamp;
+        weatherUpdateCount += 1;
     }
 
     // Function to verify an attack

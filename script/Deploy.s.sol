@@ -35,7 +35,7 @@ import {CastleTokyo} from "../contracts/CastleTokyo.sol";
 ///
 /// https://book.getfoundry.sh/tutorials/solidity-scripting
 /// https://book.getfoundry.sh/reference/forge/forge-script
-contract EvenNumberDeploy is Script {
+contract CastleTokyoDeploy is Script {
     // Path to deployment config file, relative to the project root.
     string constant CONFIG_FILE = "script/config.toml";
 
@@ -96,7 +96,7 @@ contract EvenNumberDeploy is Script {
 
         // Deploy the application contract.
         CastleTokyo castleTokyo = new CastleTokyo(verifier);
-        console2.log("Deployed EvenNumber to", address(castleTokyo));
+        console2.log("Deployed Battle Sim to", address(castleTokyo));
 
         vm.stopBroadcast();
     }

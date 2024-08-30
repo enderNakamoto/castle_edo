@@ -38,15 +38,15 @@ contract EvenNumberTest is RiscZeroCheats, Test {
         vm.stopPrank();
     }
 
-    function test_InitialDaimyo() public {
+    function test_InitialDaimyo() public view {
         assertEq(castleTokyo.daimyo(), daimyo);
     }
 
-    function test_DefaultWeatherIsClear() public {
+    function test_DefaultWeatherIsClear() public view {
         assertEq(uint(castleTokyo.currentWeather()), 0); // 0 corresponds to Weather.Clear
     }
 
-    function testSetDefense() public {
+    function test_SetDefense() public {
         vm.startPrank(daimyo);
         castleTokyo.setDefense(100, 200, 300, 50, 20);
         (
@@ -64,21 +64,21 @@ contract EvenNumberTest is RiscZeroCheats, Test {
         vm.stopPrank();
     }
 
-    function testSetDefenseRevertNotDaimyo() public {
+    function test_SetDefenseRevertNotDaimyo() public {
         vm.startPrank(player1);
         vm.expectRevert("Not the daimyo of the castle");
         castleTokyo.setDefense(100, 200, 300, 50, 20);
         vm.stopPrank();
     }
 
-    function testSetDefenseRevertExceedsMax() public {
+    function test_SetDefenseRevertExceedsMax() public {
         vm.startPrank(daimyo);
         vm.expectRevert("Total defense exceeds maximum allowed");
         castleTokyo.setDefense(500, 600, 200, 300, 100);
         vm.stopPrank();
     }
 
-    function testJoinGame() public {
+    function test_JoinGame() public {
         vm.prank(player1);
         castleTokyo.joinGame();
 
@@ -86,7 +86,7 @@ contract EvenNumberTest is RiscZeroCheats, Test {
         assertEq(castleTokyo.playerTurns(player1), 1);
     }
 
-    function testJoinGameRevertAlreadyJoined() public {
+    function test_JoinGameRevertAlreadyJoined() public {
         vm.startPrank(player1);
         castleTokyo.joinGame();
 
@@ -95,7 +95,7 @@ contract EvenNumberTest is RiscZeroCheats, Test {
         vm.stopPrank();
     }
 
-    function testGainTurn() public {
+    function test_GainTurn() public {
         vm.prank(player1);
         castleTokyo.joinGame();
 
@@ -104,13 +104,13 @@ contract EvenNumberTest is RiscZeroCheats, Test {
         assertEq(castleTokyo.playerTurns(player1), 2);
     }
 
-    function testGainTurnRevertNotJoined() public {
+    function test_GainTurnRevertNotJoined() public {
         vm.prank(player1);
         vm.expectRevert("You must join the game first");
         castleTokyo.gainTurn();
     }
 
-    function testSetWeather() public {
+    function test_SetWeather() public {
         vm.startPrank(weatherSetter);
         castleTokyo.setWeather(CastleTokyo.Weather.Cloudy);
         assertEq(uint(castleTokyo.currentWeather()), 1); // 1 corresponds to Weather.Cloudy
@@ -118,14 +118,15 @@ contract EvenNumberTest is RiscZeroCheats, Test {
         vm.stopPrank();
     }
 
-    function testSetWeatherRevertNotWeatherSetter() public {
+    function test_SetWeatherRevertNotWeatherSetter() public {
         vm.startPrank(player1);
         vm.expectRevert("Not authorized to set weather");
         castleTokyo.setWeather(CastleTokyo.Weather.Raining);
         vm.stopPrank();
     }
 
-    function testVerifyAttack() public {
+    // attack with 100
+    function test_VerifyAttackFail() public {
         vm.startPrank(daimyo);
         castleTokyo.setDefense(100, 200, 300, 50, 20);
         vm.stopPrank();
@@ -133,13 +134,17 @@ contract EvenNumberTest is RiscZeroCheats, Test {
         vm.prank(player1);
         castleTokyo.joinGame();
 
+        uint256 attacking_catapults = 100;
+        (bytes memory journal, bytes memory seal) = prove(Elf.BATTLE_SIM_PATH, abi.encode(attacking_catapults));
+
         vm.prank(player1);
-        castleTokyo.verifyAttack();
+        castleTokyo.verifyAttack(abi.decode(journal, (uint256)), seal);
 
         assertEq(castleTokyo.playerTurns(player1), 0);
+        assertEq(castleTokyo.getDaimyo(), daimyo);
     }
 
-    function testVerifyAttackRevertNoTurns() public {
+    function test_VerifyAttackSuccess() public {
         vm.startPrank(daimyo);
         castleTokyo.setDefense(100, 200, 300, 50, 20);
         vm.stopPrank();
@@ -147,20 +152,47 @@ contract EvenNumberTest is RiscZeroCheats, Test {
         vm.prank(player1);
         castleTokyo.joinGame();
 
+        uint256 attacking_catapults = 500;
+        (bytes memory journal, bytes memory seal) = prove(Elf.BATTLE_SIM_PATH, abi.encode(attacking_catapults));
+
         vm.prank(player1);
-        castleTokyo.verifyAttack();
+        castleTokyo.verifyAttack(abi.decode(journal, (uint256)), seal);
+
+        assertEq(castleTokyo.playerTurns(player1), 0);
+        assertEq(castleTokyo.getDaimyo(), player1);
+    }
+
+    function test_VerifyAttackRevertNoTurns() public {
+        vm.startPrank(daimyo);
+        castleTokyo.setDefense(100, 200, 300, 50, 20);
+        vm.stopPrank();
+
+        vm.prank(player1);
+        castleTokyo.joinGame();
+
+        uint256 attacking_catapults = 500;
+        (bytes memory journal, bytes memory seal) = prove(Elf.BATTLE_SIM_PATH, abi.encode(attacking_catapults));
+
+        vm.prank(player1);
+        castleTokyo.verifyAttack(abi.decode(journal, (uint256)), seal);
+
+        assertEq(castleTokyo.playerTurns(player1), 0);
 
         vm.prank(player1);
         vm.expectRevert("You need at least one turn to attack");
-        castleTokyo.verifyAttack();
+        castleTokyo.verifyAttack(abi.decode(journal, (uint256)), seal);
     }
 
-    function testVerifyAttackRevertNoDefense() public {
+    function test_VerifyAttackRevertNoDefense() public {
         vm.prank(player1);
         castleTokyo.joinGame();
 
+        uint256 attacking_catapults = 500;
+        (bytes memory journal, bytes memory seal) = prove(Elf.BATTLE_SIM_PATH, abi.encode(attacking_catapults));
+
         vm.prank(player1);
-        vm.expectRevert("Daimyo must have a defense set");
-        castleTokyo.verifyAttack();
+        vm.expectRevert("Castle must have a defense set");
+        castleTokyo.verifyAttack(abi.decode(journal, (uint256)), seal);
     }
+
 }

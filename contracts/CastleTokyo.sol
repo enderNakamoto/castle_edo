@@ -91,18 +91,25 @@ contract CastleTokyo {
     }
 
     // Function to verify an attack
-    function verifyAttack() external onlyJoinedPlayer {
-        require(playerTurns[msg.sender] > 0, "You need at least one turn to attack");
-        require(
-            currentDefense.infantry + currentDefense.cavalry + currentDefense.archers + currentDefense.catapults + currentDefense.ballistae > 0,
-            "Daimyo must have a defense set"
-        );
+    function verifyAttack(uint256 x, bytes calldata seal) external onlyJoinedPlayer {
+    require(playerTurns[msg.sender] > 0, "You need at least one turn to attack");
+    require(
+        currentDefense.infantry + currentDefense.cavalry + currentDefense.archers + currentDefense.catapults + currentDefense.ballistae > 0,
+        "Castle must have a defense set"
+    );
 
-        // Implementation of attack logic to be added here
-
-        // Subtract 1 turn from the player
-        playerTurns[msg.sender] -= 1;
+    // Verify the off-chain attack
+    bytes memory journal = abi.encode(x);
+    verifier.verify(seal, imageId, sha256(journal));
+    
+    // If x is 1, the attacker becomes the daimyo
+    if (x == 1) {
+        daimyo = msg.sender;
     }
+
+    // Subtract 1 turn from the player
+    playerTurns[msg.sender] -= 1;
+}
 
     // Function to allow players to join the game
     function joinGame() external {

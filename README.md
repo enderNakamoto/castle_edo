@@ -1,206 +1,71 @@
-# RISC Zero Foundry Template
-
-> Prove computation with the [RISC Zero zkVM] and verify the results in your Ethereum contract.
-
-This repository implements an example application on Ethereum utilizing RISC Zero as a [coprocessor] to the smart contract application.
-It provides a starting point for building powerful new applications on Ethereum that offload work that is computationally intensive (i.e. gas expensive), or difficult to implement in Solidity (e.g. ed25519 signature verification, or HTML parsing).
-
-<!-- TODO(#100) Integrate support for Steel more directly into this repo -->
-Integrate with [Steel][steel-repo] to execute view calls and simulate transactions on Ethereum. Check out the [ERC-20 counter][erc20-counter] demo to see an example.
+![alt text](images/castle.png)
 
 ## Overview
 
-Here is a simplified overview of how devs can integrate RISC Zero, with [Bonsai] proving, into their Ethereum smart contracts:
+Castle Tokyo (also known as Castle Edo) is a proof-of-concept game designed to integrate Risc0's zkVM for offchain computation with Acurast Oracles to retrieve real-time weather data for Tokyo, which influences the outcome of battles.
 
-![RISC Zero Foundry Template Diagram](images/risc0-foundry-template.png)
+This project was developed during a hackathon with the primary focus on laying the groundwork for future fully on-chain games rather than creating a UX-friendly experience. While some objectives have been achieved, significant work and integration are still required to reach the full potential of this concept. The ultimate goal is to establish a game framework that leverages zk technology for privacy and scalability, while using oracles to obtain random numbers (VRF) or other intriguing data—such as weather in our case—to enhance the game's dynamics.
 
-1. Run your application logic in the [RISC Zero zkVM]. The provided [publisher] app sends an off-chain proof request to the [Bonsai] proving service.
-2. [Bonsai] generates the program result, written to the [journal], and a SNARK proof of its correctness.
-3. The [publisher] app submits this proof and journal on-chain to your app contract for validation.
-4. Your app contract calls the [RISC Zero Verifier] to validate the proof. If the verification is successful, the journal is deemed trustworthy and can be safely used.
+## Rules of the Game 
 
-## Dependencies
+In Castle Tokyo, there can only be one daimyo, the lord who rules the castle. To take control, other players must assemble their armies and launch attacks to dislodge the current daimyo. Each player receives a "turn" when they join the game, with one "turn" allowing for a single attempted attack. If the attack is successful, the attacker becomes the new daimyo.
 
-First, [install Rust] and [Foundry], and then restart your terminal.
+Players have the option to purchase additional "turns," with the proceeds going to the current daimyo, creating an incentive to maintain control of the castle. This dynamic encourages strategic play, as holding the castle can be lucrative.
 
-```sh
-# Install Rust
-curl https://sh.rustup.rs -sSf | sh
-# Install Foundry
-curl -L https://foundry.paradigm.xyz | bash
-```
+Both attacking and defending armies must adhere to specific rules and limitations, requiring players to act strategically. Additionally, the real-time weather in Tokyo plays a crucial role in the effectiveness of certain units. This means that choosing the right moment to attack, when the weather is most advantageous, can be the key to victory—mirroring the strategic importance of weather in real-world battles.
 
-Next, you will use `rzup` to install `cargo-risczero`.
+## Technical Details 
 
-To install `rzup`, run the following command and follow the instructions:
+![alt text](images/architecture.png.png)
 
-```sh
-curl -L https://risczero.com/install | bash
-```
+There are various parts to the game: 
+* The Smart Contract 
+* Weather Oracle 
+* ZkVM 
+  * Guest Code Hosted in Bonsai (or could be a private cluster)
+  * Host Code (App that sends inputs to the Guest Code) - Simulated through tests in POC 
+* Frontend ( Not implemented here) 
 
-Next we can install the RISC Zero toolchain by running `rzup`:
+Lets go over each of them one at a time: 
 
-```sh
-rzup
-```
+## The Smart Contract
 
-You can verify the installation was successful by running:
+The CastleTokyo smart contract is designed to simulate a strategic game where players can join, set up defenses, and attempt to attack and take over a castle. The contract includes various roles, such as the "daimyo" (the lord of the castle), and involves mechanics like setting the weather, configuring defense units, and verifying attacks. Below is a detailed explanation of the main functions and features of the contract:
 
-```sh
-cargo risczero --version
-```
+### Main Components:
 
-Now you have all the tools you need to develop and deploy an application with [RISC Zero].
+#### Roles:
 
-## Quick Start
+* Daimyo: The lord of the castle, who initially controls the defense and other key functionalities of the castle.
+* Weather Setter (Acurast Oracle): An authorized address responsible for setting the weather conditions in the game.
+* Joined Players: Players who have joined the game and can perform actions like attacking.
 
-First, install the RISC Zero toolchain using the [instructions above](#dependencies).
 
-Now, you can initialize a new RISC Zero project at a location of your choosing:
+#### State Variables:
 
-```sh
-forge init -t risc0/bonsai-foundry-template ./my-project
-```
+* daimyo: The address of the current daimyo.
+* weatherSetter: The address authorized to set the weather.
+* lastWeatherSetTime: The timestamp of when the weather was last set.
+* attackCount: Tracks the number of attacks that have occurred.
+* playerTurns: A mapping of player addresses to their remaining turns.
+* joinedPlayers: A mapping to track which players have joined the game.
+* currentDefense: A struct holding the current defense composition of the castle.
+* currentWeather: An enum representing the current weather condition.
+* Defense 
 
-Congratulations! You've just started your first RISC Zero project.
+### Functions
 
-Your new project consists of:
+1. setDefense
+The setDefense function allows the current daimyo (the lord of the castle) to establish the castle's defensive capabilities by specifying the number of different military units, including infantry, cavalry, archers, catapults, and ballistae. This function ensures that the total number of defense units does not exceed a predefined maximum (DEFENSE_MAX). Only the daimyo can call this function, which is enforced by the onlyDaimyo modifier.
 
-- a [zkVM program] (written in Rust), which specifies a computation that will be proven;
-- a [app contract] (written in Solidity), which uses the proven results;
-- a [publisher] which makes proving requests to [Bonsai] and posts the proof to Ethereum.
-  We provide an example implementation, but your dApp interface or application servers could act as the publisher.
+2. setWeather
+The setWeather function is responsible for updating the weather conditions within the game. It is called by the Acurast oracle every 12 hours, which retrieves weather data from the OpenWeather API. The function takes an enum value representing the current weather state (Clear, Cloudy, or Raining) and records the timestamp when the weather was last set. The use of the onlyWeatherSetter modifier ensures that only the Acurast oracle, designated as the authorized weather setter, can call this function, maintaining the integrity and accuracy of the weather data within the game.
 
-### Build the Code
+3. joinGame
+The joinGame function allows a player to enter the game. Upon joining, the player is marked as a participant and is granted one turn, which they can use to perform actions like attacking the castle. The function ensures that a player can only join the game once by checking if they have already joined. This prevents duplicate entries and ensures fair gameplay.
 
-- Builds for zkVM program, the publisher app, and any other Rust code.
+4. gainTurn
+The gainTurn function currently allows players who have already joined the game to gain additional turns for free. Each turn provides the player with an opportunity to take actions within the game, such as attempting to attack the castle. While the function is free for all players at the moment, there are plans to eventually require players to pay to acquire additional turns, adding an economic layer to the game's strategy. The function ensures that only players who have joined the game can gain turns, reinforcing the game's participation structure.
 
-  ```sh
-  cargo build
-  ```
-
-- Build your Solidity smart contracts
-
-  > NOTE: `cargo build` needs to run first to generate the `ImageID.sol` contract.
-
-  ```sh
-  forge build
-  ```
-
-### Run the Tests
-
-- Tests your zkVM program.
-
-  ```sh
-  cargo test
-  ```
-
-- Test your Solidity contracts, integrated with your zkVM program.
-
-  ```sh
-  RISC0_DEV_MODE=true forge test -vvv 
-  ```
-
-- Run the same tests, with the full zkVM prover rather than dev-mode, by setting `RISC0_DEV_MODE=false`.
-
-  ```sh
-  RISC0_DEV_MODE=false forge test -vvv
-  ```
-
-  Producing the [Groth16 SNARK proofs][Groth16] for this test requires running on an x86 machine with [Docker] installed, or using [Bonsai](#configuring-bonsai). Apple silicon is currently unsupported for local proving, you can find out more info in the relevant issues [here](https://github.com/risc0/risc0/issues/1520) and [here](https://github.com/risc0/risc0/issues/1749). 
-
-## Develop Your Application
-
-To build your application using the RISC Zero Foundry Template, you’ll need to make changes in three main areas:
-
-- ***Guest Code***: Write the code you want proven in the [methods/guest](./methods/guest/) folder. This code runs off-chain within the RISC Zero zkVM and performs the actual computations. For example, the provided template includes a computation to check if a given number is even and generate a proof of this computation.
-- ***Smart Contracts***: Write the on-chain part of your project in the [contracts](./contracts/) folder. The smart contract verifies zkVM proofs and updates the blockchain state based on the results of off-chain computations. For instance, in the [EvenNumber](./contracts/EvenNumber.sol) example, the smart contract verifies a proof that a number is even and stores that number on-chain if the proof is valid.
-- ***Publisher Application***: Adjust the publisher example in the [apps](./apps/) folder. The publisher application bridges off-chain computation with on-chain verification by submitting proof requests, receiving proofs, and publishing them to the smart contract on Ethereum.
-
-### Configuring Bonsai
-
-***Note:*** *To request an API key [complete the form here](https://bonsai.xyz/apply).*
-
-With the Bonsai proving service, you can produce a [Groth16 SNARK proof][Groth16] that is verifiable on-chain.
-You can get started by setting the following environment variables with your API key and associated URL.
-
-```bash
-export BONSAI_API_KEY="YOUR_API_KEY" # see form linked above
-export BONSAI_API_URL="BONSAI_URL" # provided with your api key
-```
-
-Now if you run `forge test` with `RISC0_DEV_MODE=false`, the test will run as before, but will additionally use the fully verifying `RiscZeroGroth16Verifier` contract instead of `MockRiscZeroVerifier` and will request a SNARK receipt from Bonsai.
-
-```bash
-RISC0_DEV_MODE=false forge test -vvv
-```
-
-### Deterministic Builds
-
-By setting the environment variable `RISC0_USE_DOCKER` a containerized build process via Docker will ensure that all builds of your guest code, regardless of the machine or local environment, will produce the same [image ID][image-id].
-The [image ID][image-id], and its importance to security, is explained in more detail in our [developer FAQ].
-
-```bash
-RISC0_USE_DOCKER=1 cargo build
-```
-
-> ***Note:*** *This requires having Docker installed and in your PATH. To install Docker see [Get Docker][Docker].*
-
-## Deploy Your Application
-
-When you're ready, follow the [deployment guide] to get your application running on [Sepolia] or Ethereum Mainnet.
-
-## Project Structure
-
-Below are the primary files in the project directory
-
-```text
-.
-├── Cargo.toml                      // Configuration for Cargo and Rust
-├── foundry.toml                    // Configuration for Foundry
-├── apps
-│   ├── Cargo.toml
-│   └── src
-│       └── lib.rs                  // Utility functions
-│       └── bin                     
-│           └── publisher.rs        // Example app to publish program results into your app contract 
-├── contracts
-│   ├── EvenNumber.sol              // Basic example contract for you to modify
-│   └── ImageID.sol                 // Generated contract with the image ID for your zkVM program
-├── methods
-│   ├── Cargo.toml
-│   ├── guest
-│   │   ├── Cargo.toml
-│   │   └── src
-│   │       └── bin                 // You can add additional guest programs to this folder
-│   │           └── is_even.rs      // Example guest program for checking if a number is even
-│   └── src
-│       └── lib.rs                  // Compiled image IDs and tests for your guest programs
-└── tests
-    ├── EvenNumber.t.sol            // Tests for the basic example contract
-    └── Elf.sol                     // Generated contract with paths the guest program ELF files.
-```
-
-![alt text](images/deploy.png)
-
-[Bonsai]: https://dev.bonsai.xyz/
-[Foundry]: https://getfoundry.sh/
-[Docker]: https://docs.docker.com/get-docker/
-[Groth16]: https://www.risczero.com/news/on-chain-verification
-[RISC Zero Verifier]: https://github.com/risc0/risc0/blob/release-0.21/bonsai/ethereum/contracts/IRiscZeroVerifier.sol
-[RISC Zero installation]: https://dev.risczero.com/api/zkvm/install
-[RISC Zero zkVM]: https://dev.risczero.com/zkvm
-[RISC Zero]: https://www.risczero.com/
-[Sepolia]: https://www.alchemy.com/overviews/sepolia-testnet
-[app contract]: ./contracts/
-[cargo-binstall]: https://github.com/cargo-bins/cargo-binstall#cargo-binaryinstall
-[coprocessor]: https://www.risczero.com/news/a-guide-to-zk-coprocessors-for-scalability
-[deployment guide]: /deployment-guide.md
-[developer FAQ]: https://dev.risczero.com/faq#zkvm-application-design
-[image-id]: https://dev.risczero.com/terminology#image-id
-[install Rust]: https://doc.rust-lang.org/cargo/getting-started/installation.html
-[journal]: https://dev.risczero.com/terminology#journal
-[publisher]: ./apps/README.md
-[zkVM program]: ./methods/guest/
-[steel-repo]: https://github.com/risc0/risc0-ethereum/tree/main/steel
-[erc20-counter]: https://github.com/risc0/risc0-ethereum/tree/main/examples/erc20-counter
+5. verifyAttack
+The verifyAttack function is central to the gameplay, allowing players to attempt an attack on the castle. The function first checks that the player has at least one turn available and that the daimyo has set up a defense. The attack is then verified using an off-chain process, where a verifier checks the validity of the attack based on provided parameters (x and seal). If the attack is successful and x equals 1, the attacking player becomes the new daimyo. Regardless of the outcome, one turn is deducted from the player who called the function. This function enforces strategic gameplay, where players must manage their turns and carefully plan their attacks.

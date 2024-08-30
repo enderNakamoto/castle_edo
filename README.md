@@ -213,5 +213,7 @@ Now you have all the tools you need to develop and deploy an application with [R
 
   Producing the [Groth16 SNARK proofs][Groth16] for this test requires running on an x86 machine with [Docker] installed, or using [Bonsai](#configuring-bonsai). Apple silicon is currently unsupported for local proving, you can find out more info in the relevant issues [here](https://github.com/risc0/risc0/issues/1520) and [here](https://github.com/risc0/risc0/issues/1749).  
 
+### Team 
 
+![alt text](images/team.png)
 
